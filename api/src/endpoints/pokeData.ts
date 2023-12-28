@@ -57,7 +57,7 @@ export class PokeData extends OpenAPIRoute {
     const limit = limitParam && !isNaN(Number(limitParam)) ? parseInt(limitParam, 10) : 10;
 
     const pokemonBaseStat = await env.POKEMON_DATA.get("BASE_STAT");
-    const poke = await fetchLatestDoubleBattlePokemonRanking()
+    const poke = await getPokemonRankingData(env)
     const data = poke.slice(0, limit).map(p => buildPokeData(p['id'], p['form'],pokemonBaseStat));
 
     return new Response(JSON.stringify(data), {
@@ -81,6 +81,19 @@ export class PokeData extends OpenAPIRoute {
       types: types,
       base_stat: baseStat
     };
+  }
+
+  async function getPokemonRankingData(env: Env) {
+    let data = await env.POKEMON_DATA.get("double_battle_pokemon_ranking", "json");
+  
+    if (!data) {
+      data = await fetchLatestDoubleBattlePokemonRanking();
+      //   保存期限は24時間までにする
+      //   FIXME 保存期限はランクマッチの終了日時までの条件を追加する
+      await env.POKEMON_DATA.put("double_battle_pokemon_ranking", JSON.stringify(data), { expirationTtl: 86400 });
+    }
+  
+    return data;
   }
 
   function PokemonBaseStats(id, form, csv_base_stat) {
