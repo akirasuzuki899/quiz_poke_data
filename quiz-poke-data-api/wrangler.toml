@@ -1,0 +1,7 @@
+name = "quiz-poke-data-api"
+main = "src/index.ts"
+compatibility_date = "2023-12-18"
+
+kv_namespaces = [
+  { binding = "POKEMON_DATA", id = "fec586cf95304b60a2c6c68d1fae3858" }
+]
