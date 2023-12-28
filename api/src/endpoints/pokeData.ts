@@ -1,4 +1,4 @@
-import { OpenAPIRoute, OpenAPIRouteSchema } from "@cloudflare/itty-router-openapi";
+import { OpenAPIRoute, OpenAPIRouteSchema, Query } from "@cloudflare/itty-router-openapi";
 import { fetchLatestDoubleBattlePokemonRanking } from './rankMatchFetcher';
 
 export interface Env {
@@ -10,6 +10,13 @@ export class PokeData extends OpenAPIRoute {
   static schema: OpenAPIRouteSchema = {
     tags: ["Pokemon"],
     summary: "Get Pokemon Base Stats",
+    parameters: {
+        limit: Query(Number, {
+            description: "取得するアイテムの最大数",
+            default: 10,
+            required: false
+        })
+    },
     responses: {
       "200": {
         description: "Successful response",
@@ -44,9 +51,14 @@ export class PokeData extends OpenAPIRoute {
   };
 
   async handle(request: Request, env: Env) {
+    const url = new URL(request.url);
+    const limitParam = url.searchParams.get("limit");
+    // limitParamが存在しない、または数値でない場合は、デフォルト値10を使用
+    const limit = limitParam && !isNaN(Number(limitParam)) ? parseInt(limitParam, 10) : 10;
+
     const pokemonBaseStat = await env.POKEMON_DATA.get("BASE_STAT");
     const poke = await fetchLatestDoubleBattlePokemonRanking()
-    const data = poke.map(p => buildPokeData(p['id'], p['form'],pokemonBaseStat));
+    const data = poke.slice(0, limit).map(p => buildPokeData(p['id'], p['form'],pokemonBaseStat));
 
     return new Response(JSON.stringify(data), {
       headers: { 'Content-Type': 'application/json' }
