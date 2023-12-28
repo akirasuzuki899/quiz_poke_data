@@ -53,17 +53,23 @@ export class PokeData extends OpenAPIRoute {
   async handle(request: Request, env: Env) {
     const url = new URL(request.url);
     const limitParam = url.searchParams.get("limit");
-    // limitParamが存在しない、または数値でない場合は、デフォルト値10を使用
     const limit = limitParam && !isNaN(Number(limitParam)) ? parseInt(limitParam, 10) : 10;
-
+  
     const pokemonBaseStat = await env.POKEMON_DATA.get("BASE_STAT");
-    const poke = await getPokemonRankingData(env)
-    const data = poke.slice(0, limit).map(p => buildPokeData(p['id'], p['form'],pokemonBaseStat));
-
-    return new Response(JSON.stringify(data), {
-      headers: { 'Content-Type': 'application/json' }
+    const poke = await getPokemonRankingData(env);
+    const data = poke.slice(0, limit).map(p => buildPokeData(p['id'], p['form'], pokemonBaseStat));
+  
+    // CORSヘッダーを追加
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': 'https://quiz-poke-data.pages.dev', // すべてのオリジンからのアクセスを許可
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // 許可されるHTTPメソッド
+      'Access-Control-Allow-Headers': 'Content-Type' // 許可されるヘッダー
     });
+  
+    return new Response(JSON.stringify(data), { headers });
   }
+  
 }
 
   function buildPokeData(id, form, csv_base_stat) {
