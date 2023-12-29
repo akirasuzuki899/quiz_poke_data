@@ -101,5 +101,3 @@ async function pokemonBattleData(id, rst, ts2) {
 
   return mergedData;
 }
-
-// JSON解析エラーのハンドリングなどの詳細は省略しています。
